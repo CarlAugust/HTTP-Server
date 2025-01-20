@@ -58,10 +58,12 @@ int main(int argc, char* argv[])
         printf("%s\n\n", httpBuffer);
 
         // 5 since thats when the route begins in a http get request (GET /some route)
-        for (int i = 5; i < 256, httpBuffer[i] != ' '; i++)
-        {
+        // for (int i = 5; i < 256, httpBuffer[i] != ' '; i++)
+        // {
 
-        }
+        // }
+
+        // Return a valid http response
 
 
         close(client_fd);
