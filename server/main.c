@@ -8,6 +8,26 @@
 
 int main(int argc, char* argv[])
 {
+    if (argc != 2)
+    {
+        printf("Not enough arguments\n");
+        return 0;
+    }
+
+    FILE* htmlPtr;
+
+    htmlPtr = fopen("index.html", "r");
+
+    char charBuffer[256];
+
+    fread(charBuffer, 256, 1, htmlPtr);
+
+    printf("%s", charBuffer);
+    fclose(htmlPtr);
+
+
+    // Some testing
+
     uint16_t port = atoi(argv[1]);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
