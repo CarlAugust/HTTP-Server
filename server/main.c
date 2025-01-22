@@ -8,13 +8,13 @@
 
 int main()
 {
-    // Some testing
+
     // if (argc != 2)
     // {
     //     printf("Not enough arguments\n");
     //     return 0;
     // }
-    // Change to commandline argument later
+
     uint16_t port = 8080;
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -80,13 +80,6 @@ int main()
 
         strcat(response, fileBuffer);
         send(client_fd, response, strlen(response),  0);
-
-        // char response[512] = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n";
-
-        // strcat(response, charBuffer);
-        // printf("The servers response --- \n%s\n\n", response);
-
-        // send(client_fd, response, numRead, 0);
 
         close(client_fd);
     }
