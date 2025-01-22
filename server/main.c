@@ -15,7 +15,7 @@ int main()
     //     return 0;
     // }
     // Change to commandline argument later
-    uint16_t port = 8081;
+    uint16_t port = 8080;
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
@@ -59,33 +59,34 @@ int main()
             return 0;
         }
 
-        char requestBuffer[256];
-        read(client_fd, requestBuffer, 256);
+        char requestBuffer[1024];
+        read(client_fd, requestBuffer, 1024);
         printf("Response from client ---- \n%s\n\n", requestBuffer);
 
-        // 5 since thats when the route begins in a http get request (GET /some route)
-        // for (int i = 5; i < 256, requestBuffer[i] != ' '; i++)
-        // {
 
-        // }
-
-        // Return a valid http response
+        char response[1024] = "HTTP/1.1 200 OK\r\n";
+        strcat(response, "Content-Type: text/html; charset=UTF-8\r\n");
+        strcat(response, "Content-Length: 256\r\n");
+        strcat(response, "\r\n");
 
         FILE* htmlPtr;
 
         htmlPtr = fopen("index.html", "r");
 
-        char charBuffer[256];
+        char fileBuffer[256];
 
-        int numRead = fread(charBuffer, 1, 256, htmlPtr); 
+        int numRead = fread(fileBuffer, 1, 256, htmlPtr); 
         fclose(htmlPtr);
 
-        char response[512] = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n";
+        strcat(response, fileBuffer);
+        send(client_fd, response, strlen(response),  0);
 
-        strcat(response, charBuffer);
-        printf("The servers response --- \n%s\n\n", response);
+        // char response[512] = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n";
 
-        send(client_fd, response, numRead, 0);
+        // strcat(response, charBuffer);
+        // printf("The servers response --- \n%s\n\n", response);
+
+        // send(client_fd, response, numRead, 0);
 
         close(client_fd);
     }
