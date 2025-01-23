@@ -1,0 +1,13 @@
+What i plan on doing, i guess?
+
+1. Implement a routing system. Perhaps some sort of map so that i can search with keys
+and some system to add specific functions to the routes, including middleware. 
+
+2. Make base http response function, such as redirect, send file (it should automatically open the index file in a folder)
+
+3. Everytime the client sends a response the client_fd gets closed
+This might be proper implementation but i will have to research it.
+
+4. Adress server security, research about security and try to find security flaws within the server
+
+5. I want to see if i can make the application work with htmx
