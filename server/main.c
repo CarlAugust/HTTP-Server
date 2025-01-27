@@ -6,15 +6,21 @@
 #include <string.h>
 #include <errno.h>
 
+struct Request {
+    char* method;
+    char* path;
+};
+
+struct Request mapToRequest(char* req);
+
 int main(int argc, char* argv[])
 {
-
     if (argc != 2)
     {
         printf("Not enough arguments\n");
         return 0;
     }
-
+    
     uint16_t port = 8080;
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -63,9 +69,10 @@ int main(int argc, char* argv[])
         read(client_fd, requestBuffer, 1024);
         printf("Response from client ---- \n%s\n\n", requestBuffer);
 
+        struct Request request = mapToRequest(requestBuffer);
         FILE* htmlPtr;
 
-        htmlPtr = fopen("index.html", "r");
+        htmlPtr = fopen("./public/index.html", "r");
 
         char fileBuffer[256];
 
@@ -88,4 +95,20 @@ int main(int argc, char* argv[])
 
     close(fd);
     return 0;
+}
+
+
+struct Request mapToRequest(char* req)
+{
+    struct Request request = {NULL, NULL};
+
+    if (req == NULL)
+    {
+        return request;
+    }
+
+    request.method = strtok(req, " ");
+    request.path = strtok(NULL, " ");
+
+    return request;
 }
