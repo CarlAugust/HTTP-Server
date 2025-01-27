@@ -6,14 +6,14 @@
 #include <string.h>
 #include <errno.h>
 
-int main()
+int main(int argc, char* argv[])
 {
 
-    // if (argc != 2)
-    // {
-    //     printf("Not enough arguments\n");
-    //     return 0;
-    // }
+    if (argc != 2)
+    {
+        printf("Not enough arguments\n");
+        return 0;
+    }
 
     uint16_t port = 8080;
 
@@ -63,12 +63,6 @@ int main()
         read(client_fd, requestBuffer, 1024);
         printf("Response from client ---- \n%s\n\n", requestBuffer);
 
-
-        char response[1024] = "HTTP/1.1 200 OK\r\n";
-        strcat(response, "Content-Type: text/html; charset=UTF-8\r\n");
-        strcat(response, "Content-Length: 256\r\n");
-        strcat(response, "\r\n");
-
         FILE* htmlPtr;
 
         htmlPtr = fopen("index.html", "r");
@@ -77,6 +71,14 @@ int main()
 
         int numRead = fread(fileBuffer, 1, 256, htmlPtr); 
         fclose(htmlPtr);
+
+        char length_str[32];
+        snprintf(length_str, 31, "Content-Length: %d\r\n", numRead);
+
+        char response[1024] = "HTTP/1.1 200 OK\r\n";
+        strcat(response, "Content-Type: text/html; charset=UTF-8\r\n");
+        strcat(response, length_str);
+        strcat(response, "\r\n");
 
         strcat(response, fileBuffer);
         send(client_fd, response, strlen(response),  0);
