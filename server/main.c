@@ -22,17 +22,22 @@ struct RouteList {
 };
 
 int newHttpResponse(char * path, void(*func)(void));
-int readHttpRequest(struct Request request);
+int readHttpRequest(struct Request* request);
 int redirect(char* path); 
 int sendFile(char* file);
 struct Request mapToRequest(char* req);
 
-void routeListPush(struct RouteList* routeList, struct Route route)
+int routeListPush(struct RouteList* routeList, struct Route route)
 {
     routeList->size += 1;
     routeList->list = (struct Route* )realloc(routeList->list, sizeof(struct Route) * routeList->size);
-
+    if (routeList->list == NULL)
+    {
+        perror("RouteList allocation failed");
+        return -1;
+    }
     routeList->list[routeList->size - 1] = route;
+    return 0;
 }
 
 // Global variables
@@ -152,6 +157,12 @@ int newHttpResponse(char* path, void(* fptr)(void))
         return 1;
     }
 
+    if (strcmp(path, "") == 0)
+    {
+        printf("Path is empty");
+        return 1;
+    }
+
     if (path[0] != '/')
     {
         printf("This is not a valid path\n");
@@ -161,7 +172,27 @@ int newHttpResponse(char* path, void(* fptr)(void))
     route.fptr = fptr;
     route.path = path;
 
-    routeListPush(routeListPtr, route);
+    int success = routeListPush(routeListPtr, route);
+    if (success == -1)
+    {
+        return -1;
+    }
 
     return 0;
+}
+
+int readHttpRequest(struct Request* request)
+{
+    int routeListSize = routeListPtr->size;
+    struct Route* paths = routeListPtr->list;
+    for (int i = 0; i < routeListSize; i++)
+    {
+        if (strcmp(request->path, paths[i].path) == 0)
+        {
+            paths[i].fptr();
+            return 0;
+        }
+    }
+    printf("The path %s was requested but was not found\n", request->path);
+    return -1;
 }
