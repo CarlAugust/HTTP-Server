@@ -11,7 +11,34 @@ struct Request {
     char* path;
 };
 
+struct Route {
+    char* path;
+    void(* fptr)(void);
+};
+
+struct RouteList {
+    struct Route* list;
+    int size;
+};
+
+int newHttpResponse(char * path, void(*func)(void));
+int readHttpRequest(struct Request request);
+int redirect(char* path); 
+int sendFile(char* file);
 struct Request mapToRequest(char* req);
+
+void routeListPush(struct RouteList* routeList, struct Route route)
+{
+    routeList->size += 1;
+    routeList->list = (struct Route* )realloc(routeList->list, sizeof(struct Route) * routeList->size);
+
+    routeList->list[routeList->size - 1] = route;
+}
+
+// Global variables
+
+struct RouteList route = {NULL, 0};
+struct RouteList* routeListPtr = &route;
 
 int main(int argc, char* argv[])
 {
@@ -111,4 +138,30 @@ struct Request mapToRequest(char* req)
     request.path = strtok(NULL, " ");
 
     return request;
+}
+
+int newHttpResponse(char* path, void(* fptr)(void))
+{
+    struct Route route = {"", NULL};
+
+    printf("%s\n", path);
+
+    if (fptr == NULL)
+    {
+        printf("Function pointer i empty\n");
+        return 1;
+    }
+
+    if (path[0] != '/')
+    {
+        printf("This is not a valid path\n");
+        return 1;
+    }
+
+    route.fptr = fptr;
+    route.path = path;
+
+    routeListPush(routeListPtr, route);
+
+    return 0;
 }
