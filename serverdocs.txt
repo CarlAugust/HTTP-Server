@@ -1,0 +1,9 @@
+Documentation for how to use the http server
+
+The server currently uses a one request one response close method for communication,
+this should perhaps be changed to be done by multithreading such that the connection can be kept alive.
+
+The server folder is the main application of the server.
+Inside the public folder you can put your html, css and js and it will be treated as the root /.
+
+sendFile() sends the file requested by the client, and index.html if its empty.

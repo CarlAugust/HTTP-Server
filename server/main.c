@@ -25,6 +25,7 @@ int newHttpResponse(char * path, void(*func)(void));
 int readHttpRequest(struct Request* request);
 int redirect(char* path); 
 int sendFile(char* file);
+int errorResponse(int client_fd);
 struct Request mapToRequest(char* req);
 
 int routeListPush(struct RouteList* routeList, struct Route route)
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     
-    uint16_t port = 8080;
+    uint16_t port = atoi(argv[1]);
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
@@ -102,6 +103,15 @@ int main(int argc, char* argv[])
         printf("Response from client ---- \n%s\n\n", requestBuffer);
 
         struct Request request = mapToRequest(requestBuffer);
+        int answer = readHttpRequest(&request);
+
+        if (answer == -1)
+        {
+            printf("Boo\n");
+            errorResponse(client_fd);
+            close(client_fd);
+        }
+
         FILE* htmlPtr;
 
         htmlPtr = fopen("./public/index.html", "r");
@@ -195,4 +205,19 @@ int readHttpRequest(struct Request* request)
     }
     printf("The path %s was requested but was not found\n", request->path);
     return -1;
+}
+
+int sendFile(char* path)
+{
+
+}
+
+int errorResponse(int client_fd)
+{
+    char* response = "HTTP/1.1 404 Not Found\r\n"
+    "Content-Type: text/plain\r\n"
+    "Content-Length: 0\r\n"
+    "Connection: close\r\n"
+    "\r\n";
+    send(client_fd, response, strlen(response), 0);    
 }
