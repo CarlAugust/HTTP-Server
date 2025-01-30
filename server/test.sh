@@ -1,2 +1,2 @@
 gcc -o main main.c
-./main 8080
+./main 8081

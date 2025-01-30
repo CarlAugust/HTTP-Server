@@ -13,7 +13,7 @@ struct Request {
 
 struct Route {
     char* path;
-    void(* fptr)(void);
+    void(* fptr)(int client_fd);
 };
 
 struct RouteList {
@@ -21,10 +21,10 @@ struct RouteList {
     int size;
 };
 
-int newHttpResponse(char * path, void(*func)(void));
-int readHttpRequest(struct Request* request);
+int newHttpResponse(char * path, void(*func)(int client_fd));
+int readHttpRequest(struct Request* request, int client_fd);
 int redirect(char* path); 
-int sendFile(char* file);
+int sendFile(char* path, int client_fd);
 int errorResponse(int client_fd);
 struct Request mapToRequest(char* req);
 
@@ -46,8 +46,15 @@ int routeListPush(struct RouteList* routeList, struct Route route)
 struct RouteList route = {NULL, 0};
 struct RouteList* routeListPtr = &route;
 
+void test(int client_fd)
+{
+    sendFile("/", client_fd);
+}
+
 int main(int argc, char* argv[])
 {
+    newHttpResponse("/", &test);
+
     if (argc != 2)
     {
         printf("Not enough arguments\n");
@@ -103,7 +110,7 @@ int main(int argc, char* argv[])
         printf("Response from client ---- \n%s\n\n", requestBuffer);
 
         struct Request request = mapToRequest(requestBuffer);
-        int answer = readHttpRequest(&request);
+        int answer = readHttpRequest(&request, client_fd);
 
         if (answer == -1)
         {
@@ -111,26 +118,6 @@ int main(int argc, char* argv[])
             errorResponse(client_fd);
             close(client_fd);
         }
-
-        FILE* htmlPtr;
-
-        htmlPtr = fopen("./public/index.html", "r");
-
-        char fileBuffer[256];
-
-        int numRead = fread(fileBuffer, 1, 256, htmlPtr); 
-        fclose(htmlPtr);
-
-        char length_str[32];
-        snprintf(length_str, 31, "Content-Length: %d\r\n", numRead);
-
-        char response[1024] = "HTTP/1.1 200 OK\r\n";
-        strcat(response, "Content-Type: text/html; charset=UTF-8\r\n");
-        strcat(response, length_str);
-        strcat(response, "\r\n");
-
-        strcat(response, fileBuffer);
-        send(client_fd, response, strlen(response),  0);
 
         close(client_fd);
     }
@@ -155,7 +142,7 @@ struct Request mapToRequest(char* req)
     return request;
 }
 
-int newHttpResponse(char* path, void(* fptr)(void))
+int newHttpResponse(char* path, void(* fptr)(int client_fd))
 {
     struct Route route = {"", NULL};
 
@@ -191,7 +178,7 @@ int newHttpResponse(char* path, void(* fptr)(void))
     return 0;
 }
 
-int readHttpRequest(struct Request* request)
+int readHttpRequest(struct Request* request, int client_fd)
 {
     int routeListSize = routeListPtr->size;
     struct Route* paths = routeListPtr->list;
@@ -199,7 +186,7 @@ int readHttpRequest(struct Request* request)
     {
         if (strcmp(request->path, paths[i].path) == 0)
         {
-            paths[i].fptr();
+            paths[i].fptr(client_fd);
             return 0;
         }
     }
@@ -207,9 +194,27 @@ int readHttpRequest(struct Request* request)
     return -1;
 }
 
-int sendFile(char* path)
+int sendFile(char* path, int client_fd)
 {
+        FILE* htmlPtr;
 
+        htmlPtr = fopen("./public/index.html", "r");
+
+        char fileBuffer[256];
+
+        int numRead = fread(fileBuffer, 1, 256, htmlPtr); 
+        fclose(htmlPtr);
+
+        char length_str[32];
+        snprintf(length_str, 31, "Content-Length: %d\r\n", numRead);
+
+        char response[1024] = "HTTP/1.1 200 OK\r\n";
+        strcat(response, "Content-Type: text/html; charset=UTF-8\r\n");
+        strcat(response, length_str);
+        strcat(response, "\r\n");
+
+        strcat(response, fileBuffer);
+        send(client_fd, response, strlen(response),  0);
 }
 
 int errorResponse(int client_fd)
