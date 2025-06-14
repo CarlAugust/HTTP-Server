@@ -12,4 +12,11 @@ I will also have to make some http response functions like a redirect, and sendi
 This project is meant to be a learning experience, thus i want to try to avoid using online solutions
 and instead i will try to implement everything myself and perhaps compare it to others later.
 
+# Build process
+`mkdir -p build`
 
+`cd build`
+
+`cmake ..`
+
+`make`
