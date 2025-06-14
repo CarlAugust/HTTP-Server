@@ -1,1 +1,13 @@
-/build
+# Ignore build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/chip8-emulator
+
+# Ignore user-specific IDE files
+.vscode/
+
+# Ignore binary/ROMs if not source-controlled
+chip8roms/*.ch8
