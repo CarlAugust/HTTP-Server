@@ -6,7 +6,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/build/http",
-        "args": [],
+        "args": ["3000"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
