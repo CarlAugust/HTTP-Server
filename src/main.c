@@ -13,7 +13,7 @@
 void* client_handle(void* arg);
 
 int main(int argc, char* argv[]) {
-    
+
     if (argc != 2)
     {
         printf("Not enough arguments\n");
@@ -78,11 +78,12 @@ void* client_handle(void* arg) {
     int client_fd = *(int *)arg;
     char buffer[1024];
     int readval;
-    char* message = "Boo\n";
 
     while((readval = read(client_fd, &buffer, 1024)) > 0) {
         printf("Client: %s", buffer);
-        send(client_fd, message, strlen(message), 0);
+        char path[MAX_PATH_SIZE];
+        resolvePath("/index.html", path);
+        sendFile(path, client_fd);
         memset(buffer, 0, sizeof(buffer));
     }    
 
