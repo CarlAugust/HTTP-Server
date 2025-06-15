@@ -6,12 +6,14 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <handler.h>
 
 #define MAX_CLIENTS 100
 
 void* client_handle(void* arg);
 
 int main(int argc, char* argv[]) {
+    
     if (argc != 2)
     {
         printf("Not enough arguments\n");
