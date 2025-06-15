@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h> // For PATH_MAX
+#include <limits.h>
 
-char* resolvePath(char* path, char resolved_path[]);
+#define MAX_PATH_SIZE 100
+
+int resolvePath(char* path, char resolved_path[]);
