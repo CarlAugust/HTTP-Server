@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +21,8 @@ typedef struct {
 
 
 int resolvePath(char* path, char resolved_path[]);
-int sendFile(char* path, int client_fd);
 
 // Returns NULL if invalid request
 int parseRequest(char* request, HttpRequest* httpRequest);
+
+#endif // !

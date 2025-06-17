@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <main.h>
-#include <handler.h>
+#include <utils.h>
 
 #define MAX_CLIENTS 100
 
@@ -22,8 +22,6 @@ int main(int argc, char* argv[]) {
     }
 
     uint16_t port = atoi(argv[1]);
-    pthread_t threads[MAX_CLIENTS];
-    uint8_t thread_count = 0;
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -54,6 +52,9 @@ int main(int argc, char* argv[]) {
         exit(0);
     }
 
+    pthread_t threads[MAX_CLIENTS];
+    uint8_t thread_count = 0;
+
     while(1) {
         int client_fd = accept(fd, addr, &addr_len);
         if(client_fd == -1) {
@@ -80,16 +81,19 @@ void* client_handle(void* arg) {
     char request[MAX_REQUEST_SIZE];
     int readval;
 
-    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE)) > 0) {
-        
-        printf("Client %i requested with:\n %s", client_fd, request);
+    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE - 1)) > 0) {
+        // Null terminate to be safe
+        request[readval] = '\0';
 
         HttpRequest httpRequest;
-
-        parseRequest(request, &httpRequest);
+        if(parseRequest(request, &httpRequest) == -1)
+        {
+            http_response_error(client_fd);
+        }
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);
-        sendFile(path, client_fd);
+
+        http_response_sendFile(path, client_fd);
         memset(request, 0, sizeof(request));
     }    
 
