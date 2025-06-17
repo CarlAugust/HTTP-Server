@@ -32,7 +32,7 @@ int sendFile(char* path, int client_fd)
     FILE* fptr;
     fptr = fopen(path, "rb");
     if (fptr == NULL) {
-        perror("Something went wrong when opening a file:");
+        perror("Error opening file:");
         return -1;
     }
 
@@ -47,7 +47,7 @@ int sendFile(char* path, int client_fd)
     }
 
     if (fread(buffer, 1, file_size, fptr) != file_size) {
-        perror("Something went wrong when reading the file:");
+        perror("Error reading file:");
         free(buffer);
         fclose(fptr);
         return -1;
@@ -58,6 +58,15 @@ int sendFile(char* path, int client_fd)
 
     send(client_fd, buffer, file_size, 0);
     free(buffer);
+
+    return 0;
+}
+
+int parseRequest(char* request, HttpRequest* httpRequest) {
+    snprintf(request, MAX_REQUEST_LINE_SIZE, "%s %s %s\r\n", httpRequest->http_version, httpRequest->method, httpRequest->request_target);
+    printf("YOOOO: %s %s %s\n", httpRequest->http_version, httpRequest->method, httpRequest->request_target);
+
+    // Perhaps validation afterwords
 
     return 0;
 }

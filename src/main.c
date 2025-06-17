@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <main.h>
 #include <handler.h>
 
 #define MAX_CLIENTS 100
@@ -76,15 +77,20 @@ int main(int argc, char* argv[]) {
 
 void* client_handle(void* arg) {
     int client_fd = *(int *)arg;
-    char buffer[1024];
+    char request[MAX_REQUEST_SIZE];
     int readval;
 
-    while((readval = read(client_fd, &buffer, 1024)) > 0) {
-        printf("Client: %s", buffer);
+    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE)) > 0) {
+        
+        printf("Client %i requested with:\n %s", client_fd, request);
+
+        HttpRequest httpRequest;
+
+        parseRequest(request, &httpRequest);
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);
         sendFile(path, client_fd);
-        memset(buffer, 0, sizeof(buffer));
+        memset(request, 0, sizeof(request));
     }    
 
     if (readval == 0) 
