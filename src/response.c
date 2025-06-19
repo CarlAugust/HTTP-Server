@@ -1,6 +1,25 @@
 #include <response.h>
 
-int http_response_sendFile(char* path, int client_fd)
+int response_formatAndSend(int client_fd, HTTPResponse* httpResponse)
+{
+    // Worlds largest snprintf???
+    char* response = (char*)malloc(MAX_RESPONSE_SIZE);
+    snprintf(response, MAX_RESPONSE_SIZE, 
+        "%s %i %s\r\n"
+        "Content-Type: %s\r\n"
+        "Content-length: %i\r\n\r\n"
+        "%s",
+        httpResponse->http_version,
+        httpResponse->response_code,
+        httpResponse->response_reason,
+        httpResponse->content_type,
+        httpResponse->content_length,
+        httpResponse->body);
+    free(response);
+    return 0;
+}
+
+int response_sendFile(char* path, int client_fd)
 {
     FILE* fptr;
     fptr = fopen(path, "rb");
@@ -13,24 +32,24 @@ int http_response_sendFile(char* path, int client_fd)
     u_int64_t file_size = ftell(fptr);
     fseek(fptr, 0, SEEK_SET);
 
-    char* buffer = (char*)malloc(file_size + 1);
-    if (buffer == NULL) {
+    char* body = (char*)malloc(file_size + 1);
+    if (body == NULL) {
         fclose(fptr);
         return -1;
     }
 
-    if (fread(buffer, 1, file_size, fptr) != file_size) {
+    if (fread(body, 1, file_size, fptr) != file_size) {
         perror("Error reading file:");
-        free(buffer);
+        free(body);
         fclose(fptr);
         return -1;
     }
 
-    buffer[file_size] = '\0';
+    body[file_size] = '\0';
     fclose(fptr);
 
-    send(client_fd, buffer, file_size, 0);
-    free(buffer);
+    send(client_fd, body, file_size, 0);
+    free(body);
 
     return 0;
 }

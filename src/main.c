@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <main.h>
 #include <utils.h>
+#include <response.h>
 
 #define MAX_CLIENTS 100
 
@@ -85,10 +86,10 @@ void* client_handle(void* arg) {
         // Null terminate to be safe
         request[readval] = '\0';
 
-        HttpRequest httpRequest;
+        HTTPRequest httpRequest;
         if(parseRequest(request, &httpRequest) == -1)
         {
-            http_response_error(client_fd);
+            response_error(client_fd, 400);
         }
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);

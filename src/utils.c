@@ -27,7 +27,7 @@ int resolvePath(char* path, char resolved_path[])
     }
 }
 
-int parseRequest(char* request, HttpRequest* httpRequest) {
+int parseRequest(char* request, HTTPRequest* httpRequest) {
 
     char requestLine[MAX_REQUEST_LINE_SIZE];
     snprintf(requestLine, MAX_REQUEST_LINE_SIZE, "%s", request);
@@ -46,4 +46,28 @@ int parseRequest(char* request, HttpRequest* httpRequest) {
     snprintf(httpRequest->http_version, sizeof(httpRequest->http_version), "%s", token);
 
     return 0;
+}
+
+int reasonFromCode(uint16_t code, char* reason)
+{
+    switch(code) {
+        case 200:
+            strcpy(reason, "OK");
+            return 0;
+        case 400:
+            strcpy(reason, "Bad Request");
+            return 0;
+        case 403:
+            strcpy(reason, "Forbidden");
+            return 0;
+        case 404:
+            strcpy(reason, "Not Found");
+            return 0;
+        case 500:
+            strcpy(reason, "Internal Server Error");
+            return 0;
+        default:
+            strcpy(reason, "Unknown");
+            return -1;
+    }
 }
