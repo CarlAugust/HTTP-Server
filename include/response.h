@@ -9,12 +9,31 @@
 #include <errno.h>
 #include <utils.h>
 #include <types.h>
+#include <main.h>
 
 #define MAX_RESPONSE_SIZE 10240
 
-int response_sendFile(char* path, int client_fd);
-int response_error(int client_fd, uint16_t code);
+// Abstracted send functions
+/*
+All abstracted functions in this file creates a HTTPResponse object
+which is then sent to the client via the response_formatAndSend function
+*/
 
-int reponse_formatAndSend(int client_fd, HTTPResponse* httpResponse);
+int response_sendFile(char* path);
+int response_sendError(uint16_t code);
+
+//--------//
+
+/*
+Arguments:
+- Pointer to a fully constructed HTTPResponse struct
+
+Parses a HTTPResonse struct object and sends it to the client
+This function can be reused to create custom response_send* functions,
+and is used in all prebuilt response_send* functions
+
+Note: This functions does not take ownership over the httpResponse
+*/ 
+int response_sendRaw(HTTPResponse* httpResponse);
 
 #endif

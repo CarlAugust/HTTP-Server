@@ -7,4 +7,7 @@
 #include<response.h>
 #include<types.h>
 
+// Gets the client on the current thread
+int get_client_fd();
+
 #endif // !

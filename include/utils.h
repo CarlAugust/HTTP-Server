@@ -14,7 +14,7 @@
 
 int resolvePath(char* path, char resolved_path[]);
 
-// Returns NULL if invalid request
+// Returns -1 if invalid request
 int parseRequest(char* request, HTTPRequest* httpRequest);
 
 // Get the status code message/reason from the code for HTTPResponse struct

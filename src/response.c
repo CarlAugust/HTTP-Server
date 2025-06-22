@@ -1,7 +1,9 @@
 #include <response.h>
 
-int response_formatAndSend(int client_fd, HTTPResponse* httpResponse)
+
+int response_sendRaw(HTTPResponse* httpResponse)
 {
+    int client_fd = get_client_fd();
     // Worlds largest snprintf???
     char* response = (char*)malloc(MAX_RESPONSE_SIZE);
     snprintf(response, MAX_RESPONSE_SIZE, 
@@ -19,7 +21,7 @@ int response_formatAndSend(int client_fd, HTTPResponse* httpResponse)
     return 0;
 }
 
-int response_sendFile(char* path, int client_fd)
+int response_sendFile(char* path)
 {
     FILE* fptr;
     fptr = fopen(path, "rb");
@@ -47,8 +49,6 @@ int response_sendFile(char* path, int client_fd)
 
     body[file_size] = '\0';
     fclose(fptr);
-
-    send(client_fd, body, file_size, 0);
     free(body);
 
     return 0;

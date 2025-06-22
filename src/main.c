@@ -6,13 +6,18 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <main.h>
 #include <utils.h>
 #include <response.h>
 
 #define MAX_CLIENTS 100
+pthread_key_t client_fd_key;
+pthread_once_t key_once = PTHREAD_ONCE_INIT;
+
 
 void* client_handle(void* arg);
+static void make_key();
 
 int main(int argc, char* argv[]) {
 
@@ -62,7 +67,6 @@ int main(int argc, char* argv[]) {
             perror("Failed while accepting\n");
             continue;
         }
-
         if (thread_count < MAX_CLIENTS) {
             if(pthread_create(&threads[thread_count++], NULL, client_handle, (void*)&client_fd) != 0)
             {
@@ -79,6 +83,8 @@ int main(int argc, char* argv[]) {
 
 void* client_handle(void* arg) {
     int client_fd = *(int *)arg;
+    pthread_once(&key_once, make_key);
+    pthread_setspecific(client_fd_key, (void*)(intptr_t)client_fd);
     char request[MAX_REQUEST_SIZE];
     int readval;
 
@@ -89,12 +95,12 @@ void* client_handle(void* arg) {
         HTTPRequest httpRequest;
         if(parseRequest(request, &httpRequest) == -1)
         {
-            response_error(client_fd, 400);
+            response_sendError(500);
         }
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);
 
-        http_response_sendFile(path, client_fd);
+        response_sendFile(path);
         memset(request, 0, sizeof(request));
     }    
 
@@ -108,4 +114,12 @@ void* client_handle(void* arg) {
     close(client_fd);
     pthread_exit(NULL);
     return NULL;
+}
+
+static void make_key() {
+    pthread_key_create(&client_fd_key, NULL);
+}
+
+int get_client_fd() {
+    return (int)(intptr_t)pthread_getspecific(client_fd_key);
 }

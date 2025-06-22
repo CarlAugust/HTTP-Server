@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
@@ -23,3 +26,5 @@ typedef struct {
     uint32_t content_length;
     char* body;
 } HTTPResponse;
+
+#endif 
