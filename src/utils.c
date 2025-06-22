@@ -14,7 +14,7 @@ int resolvePath(char* path, char resolved_path[])
     snprintf(path_public, sizeof(path_public), "%s%s", base_dir, path);
 
     if (realpath(path_public, resolved_path) == 0) {
-        perror("Could not resolve public folder:");
+        perror("Could not find in public folder:");
         return -1;
     }
 
