@@ -48,26 +48,26 @@ int parseRequest(char* request, HTTPRequest* httpRequest) {
     return 0;
 }
 
-int reasonFromCode(uint16_t code, char* reason)
+int reasonFromCode(uint16_t code, char reason[64])
 {
     switch(code) {
         case 200:
-            strcpy(reason, "OK");
+            strncpy(reason, "OK", 64);
             return 0;
         case 400:
-            strcpy(reason, "Bad Request");
+            strncpy(reason, "Bad Request", 64);
             return 0;
         case 403:
-            strcpy(reason, "Forbidden");
+            strncpy(reason, "Forbidden", 64);
             return 0;
         case 404:
-            strcpy(reason, "Not Found");
+            strncpy(reason, "Not Found", 64);
             return 0;
         case 500:
-            strcpy(reason, "Internal Server Error");
+            strncpy(reason, "Internal Server Error", 64);
             return 0;
         default:
-            strcpy(reason, "Unknown");
+            strncpy(reason, "Unknown", 64);
             return -1;
     }
 }

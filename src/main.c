@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) {
             close(client_fd);
         }
     }
+    close(fd);
+    return 0;
 }
 
 
@@ -92,12 +94,17 @@ void* client_handle(void* arg) {
         // Null terminate to be safe
         request[readval] = '\0';
 
+        printf("Read from client\n");
+
         HTTPRequest httpRequest;
         if(parseRequest(request, &httpRequest) == -1)
         {
             continue;
         }
-        
+        char path[MAX_PATH_SIZE];
+        resolvePath("/index.html", path);
+
+        response_sendFile(path);
         memset(request, 0, sizeof(request));
     }    
 
