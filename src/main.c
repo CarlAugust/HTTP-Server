@@ -122,12 +122,13 @@ void* client_handle(void* arg) {
         HTTPRequest httpRequest;
         if(parseRequest(request, &httpRequest) == -1)
         {
+            response_sendError(400);
             continue;
         }
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);
 
-        response_sendFile(path);
+        response_sendError(500);
         memset(request, 0, sizeof(request));
     }    
 

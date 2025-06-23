@@ -8,6 +8,7 @@ int response_sendRaw(HTTPResponse* httpResponse)
     char* response = (char*)malloc(MAX_RESPONSE_SIZE);
     snprintf(response, MAX_RESPONSE_SIZE, 
         "%s %i %s\r\n"
+        "Connection: keep-alive\r\n"
         "Content-Type: %s\r\n"
         "Content-length: %i\r\n\r\n"
         "%s",
@@ -22,6 +23,22 @@ int response_sendRaw(HTTPResponse* httpResponse)
 
     free(response);
     return 0;
+}
+
+int response_sendError(uint16_t code)
+{
+    HTTPResponse* httpResponse = malloc(sizeof(HTTPResponse));
+    strncpy(httpResponse->http_version, "HTTP/1.1", sizeof(httpResponse->http_version));
+    httpResponse->response_code = code;
+    reasonFromCode(httpResponse->response_code, httpResponse->response_reason);
+    strncpy(httpResponse->content_type, "application/json", sizeof(httpResponse->content_type));
+    // Hard coded JSON for now
+    httpResponse->body = "{"
+                         "\"error\": \"Internal Server error\""
+                         "}";
+    httpResponse->content_length = strlen(httpResponse->body);
+    response_sendRaw(httpResponse);
+    free(httpResponse);
 }
 
 int response_sendFile(char* path)
@@ -57,6 +74,8 @@ int response_sendFile(char* path)
     strncpy(httpResponse->http_version, "HTTP/1.1", sizeof(httpResponse->http_version));
     httpResponse->body = body;
     httpResponse->content_length = file_size;
+
+    // Needs to change type based on file type
     strncpy(httpResponse->content_type, "text/html", sizeof(httpResponse->content_type));
     httpResponse->response_code = 200;
     reasonFromCode(httpResponse->response_code, httpResponse->response_reason);

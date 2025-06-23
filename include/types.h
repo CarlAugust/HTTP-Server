@@ -19,6 +19,9 @@ Necessary fields:
     - http_version, most likely http/1.1
     - response_code
     - response_reason, can use reasonFromCode from util.h
+    - content_type
+    - content_length
+    - body
 */
 typedef struct {
     char http_version[64];
