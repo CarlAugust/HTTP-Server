@@ -3,7 +3,6 @@
 
 int response_sendRaw(HTTPResponse* httpResponse)
 {
-    printf("Response_sendRaw was called\n");
     int client_fd = get_client_fd();
     // Worlds largest snprintf???
     char* response = (char*)malloc(MAX_RESPONSE_SIZE);

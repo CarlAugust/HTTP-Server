@@ -1,6 +1,9 @@
 List of things that need to be done:
 
 1. Make some base functions for displaying fixed content in the browser, (http response encoding ect)
+
+1,9. Proper error responses for the later parsing, nad implementil connection:keep-alive/close, multirequests and
+timeout to close threads
 2. Proper parsing of requests, being able to differtiate from /home or /home?id=23,
 both are same path however one has a parameter
 

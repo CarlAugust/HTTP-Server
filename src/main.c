@@ -7,17 +7,24 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <signal.h>
 #include <main.h>
 #include <utils.h>
 #include <response.h>
 
 #define MAX_CLIENTS 100
+
+int server_fd;
+volatile sig_atomic_t shutdown_requested = 0;
+
 pthread_key_t client_fd_key;
 pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
 
+
 void* client_handle(void* arg);
 static void make_key();
+static void handle_sigint(int sig);
 
 int main(int argc, char* argv[]) {
 
@@ -27,14 +34,26 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // Signal setup
+    struct sigaction sa;
+    sa.sa_handler = handle_sigint;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+
+    // Socket setup
+
     uint16_t port = atoi(argv[1]);
 
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd == -1) {
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd == -1) {
         perror("Error when creating socket\n");
-        close(fd);
+        close(server_fd);
         exit(0);
     }
+
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
@@ -44,25 +63,25 @@ int main(int argc, char* argv[]) {
     struct sockaddr* addr = (struct sockaddr *)&addr_in;
     socklen_t addr_len = sizeof(addr_in);
 
-    if(bind(fd, addr, addr_len) == -1)
+    if(bind(server_fd, addr, addr_len) == -1)
     {
         perror("Error when binding socket\n");
-        close(fd);
+        close(server_fd);
         exit(0);
     }
 
-    if(listen(fd, 10) == -1)
+    if(listen(server_fd, 10) == -1)
     {
         perror("Error when listening");
-        close(fd);
+        close(server_fd);
         exit(0);
     }
 
     pthread_t threads[MAX_CLIENTS];
     uint8_t thread_count = 0;
 
-    while(1) {
-        int client_fd = accept(fd, addr, &addr_len);
+    while(!shutdown_requested) {
+        int client_fd = accept(server_fd, addr, &addr_len);
         if(client_fd == -1) {
             perror("Failed while accepting\n");
             continue;
@@ -78,8 +97,12 @@ int main(int argc, char* argv[]) {
             close(client_fd);
         }
     }
-    close(fd);
-    return 0;
+
+    for (int i = 0; i < thread_count; ++i) {
+        pthread_join(threads[i], NULL);
+    }
+
+    exit(0);
 }
 
 
@@ -90,11 +113,11 @@ void* client_handle(void* arg) {
     char request[MAX_REQUEST_SIZE];
     int readval;
 
-    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE - 1)) > 0) {
+    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE - 1)) > 0 && !shutdown_requested) {
         // Null terminate to be safe
         request[readval] = '\0';
 
-        printf("Read from client\n");
+        printf("%s\n", request);
 
         HTTPRequest httpRequest;
         if(parseRequest(request, &httpRequest) == -1)
@@ -108,9 +131,10 @@ void* client_handle(void* arg) {
         memset(request, 0, sizeof(request));
     }    
 
-    if (readval == 0) 
-    {
+    if (readval == 0) {
         printf("Client disconnected\n");
+    } else if (shutdown_requested) {
+        printf("SIGNINT told the thread to stop\n");
     } else if (readval < 0) {
         perror("Read error\n");
     }
@@ -124,6 +148,14 @@ static void make_key() {
     pthread_key_create(&client_fd_key, NULL);
 }
 
+static void handle_sigint(int sig)
+{
+    shutdown_requested = 1;
+    shutdown(server_fd, SHUT_RDWR);
+    close(server_fd);
+}
+
 int get_client_fd() {
     return (int)(intptr_t)pthread_getspecific(client_fd_key);
 }
+
