@@ -6,7 +6,12 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-// Struct for parsed http requests
+/* 
+Necessary fields:
+    - method
+    - request_target, e.g /about /home ect...
+    - http_version, most likely http/1.1
+*/
 typedef struct {
     char method[16];
     char request_target[432];
