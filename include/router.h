@@ -7,11 +7,15 @@
 
 #define MAX_ROUTES 256
 
-
+/*
+    Arguments:
+        - httpRequest
+        - httpReponse, does not take ownership
+*/
 typedef void (*RouteHandler)(HTTPRequest* httpRequest, HTTPResponse* httpResponse);
 
 /*
-    - path, might be removed as it will be used as a key for a hashmap
+    - path, used as a identifier for each route
     - get, function for GET method
     - post, function for POST method
     - delete, function for DELETE method
@@ -31,11 +35,5 @@ typedef struct Router {
     Route list[MAX_ROUTES];
     uint32_t listLength;
 } Router;
-
-typedef enum {
-    HTTP_GET,
-    HTTP_POST,
-    HTTP_DELETE
-} HttpMethod;
 
 #endif

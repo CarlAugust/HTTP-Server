@@ -6,6 +6,23 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+typedef struct {
+    char key[32];
+    char value[32];
+} HTTPQuery;
+
+
+typedef struct {
+    char key[32];
+    char value[32];
+} HTTPParam;
+
+typedef enum {
+    HTTP_GET,
+    HTTP_POST,
+    HTTP_DELETE
+} HttpMethod;
+
 /* 
 Necessary fields:
     - method
@@ -13,9 +30,15 @@ Necessary fields:
     - http_version, most likely http/1.1
 */
 typedef struct {
-    char method[16];
+    HttpMethod method;
     char request_target[432];
     char http_version[64];
+
+    HTTPQuery queryList[16];
+    uint32_t queryListLength;
+
+    HTTPParam paramList[8];
+    uint32_t queryListLength;
 } HTTPRequest;
 
 

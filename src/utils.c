@@ -28,22 +28,11 @@ int resolvePath(char* path, char resolved_path[])
 }
 
 int parseRequest(char* request, HTTPRequest* httpRequest) {
-
-    char requestLine[MAX_REQUEST_LINE_SIZE];
-    snprintf(requestLine, MAX_REQUEST_LINE_SIZE, "%s", request);
-
-    // Tokenize
-    char* token = strtok(requestLine, " ");
-    if (!token) return -1;
-    snprintf(httpRequest->method, sizeof(httpRequest->method), "%s", token);
-
-    token = strtok(NULL, " ");
-    if (!token) return -1;
-    snprintf(httpRequest->request_target, sizeof(httpRequest->request_target), "%s", token);
-
-    token = strtok(NULL, "\r\n");
-    if (!token) return -1;
-    snprintf(httpRequest->http_version, sizeof(httpRequest->http_version), "%s", token);
+    uint32_t matched = sscanf(request, "%15s %431s %63s", httpRequest->method, httpRequest->request_target, httpRequest->http_version);
+    if (matched != 3)
+    {
+        return -1;
+    }
 
     return 0;
 }

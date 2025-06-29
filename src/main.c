@@ -120,11 +120,11 @@ void* client_handle(void* arg) {
         printf("%s\n", request);
 
         HTTPRequest httpRequest;
-        if(parseRequest(request, &httpRequest) == -1)
-        {
-            response_sendError(400);
-            continue;
-        }
+        // if(parseRequest(request, &httpRequest) == -1)
+        // {
+        //     response_sendError(400);
+        //     continue;
+        // }
         char path[MAX_PATH_SIZE];
         resolvePath("/index.html", path);
 
