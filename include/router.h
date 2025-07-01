@@ -33,7 +33,16 @@ typedef struct Router {
 
     // Hardcoded to 256 to avoid dynamic allocation for now
     Route list[MAX_ROUTES];
+
     uint32_t listLength;
 } Router;
+
+Router* router_create();
+
+int router_runHandler(Router* router, HTTPRequest* httpRequest);
+int router_get(Router* router, const char* path, RouteHandler routeHandler);
+int router_post(Router* router, const char* path, RouteHandler routeHandler);
+int router_delete(Router* router, const char* path, RouteHandler routeHandler);
+
 
 #endif

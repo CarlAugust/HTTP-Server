@@ -30,7 +30,7 @@ Necessary fields:
     - http_version, most likely http/1.1
 */
 typedef struct {
-    HttpMethod method;
+    char method[16];
     char request_target[432];
     char http_version[64];
 
@@ -38,7 +38,7 @@ typedef struct {
     uint32_t queryListLength;
 
     HTTPParam paramList[8];
-    uint32_t queryListLength;
+    uint32_t paramListLength;
 } HTTPRequest;
 
 

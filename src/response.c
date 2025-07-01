@@ -43,8 +43,11 @@ int response_sendError(uint16_t code)
 
 int response_sendFile(char* path)
 {
+    char resolved_path[MAX_PATH_SIZE];
+    resolvePath(path, resolved_path);
+
     FILE* fptr;
-    fptr = fopen(path, "rb");
+    fptr = fopen(resolved_path, "rb");
     if (fptr == NULL) {
         perror("Error opening file:");
         return -1;

@@ -1,16 +1,16 @@
 #include <router.h>
 
 
-int router_create(Router* router)
+Router* router_create()
 {
-    router = malloc(sizeof(router));
+    Router* router = malloc(sizeof(Router));
     if (router == NULL)
     {
-        return -1;
+        return NULL;
     }
 
     router->listLength = 0;
-    return 0;
+    return router;
 }
 
 static uint8_t router_includes(Router* router, const char* path)
@@ -27,6 +27,7 @@ static uint8_t router_includes(Router* router, const char* path)
 
 static int router_add(Router* router, HttpMethod httpMethod, const char* path, RouteHandler routeHandler)
 {
+    uint32_t boo = router->listLength;
     if (router->listLength == MAX_ROUTES)
     {
         printf("Max route capacity reached when adding %s\n", path);
@@ -146,19 +147,22 @@ int router_runHandler(Router* router, HTTPRequest* httpRequest)
 
     HTTPResponse* httpResponse = malloc(sizeof(httpResponse));
 
-    switch (httpRequest->method)
-    {
-        case HTTP_GET:
+    if (strncmp(httpRequest->method, "GET", sizeof(httpRequest->method)) == 0) {
+        if (routePtr->get != NULL)
+        {
             routePtr->get(httpRequest, httpResponse);
-            break;
-        case HTTP_POST:
-            routePtr-post(httpRequest, httpResponse);
-            break;
-        case HTTP_DELETE:
+        }
+    } else if (strncmp(httpRequest->method, "POST", sizeof(httpRequest->method)) == 0) {
+        if (routePtr->post != NULL)
+        {
+            routePtr->post(httpRequest, httpResponse);
+        }
+    } else if (strncmp(httpRequest->method, "DELETE", sizeof(httpRequest->method)) == 0)
+    {
+        if (routePtr->delete != NULL)
+        {
             routePtr->delete(httpRequest, httpResponse);
-            break;
-        default:
-            return -1;
+        }
     }
 
     free(httpResponse);

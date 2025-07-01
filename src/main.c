@@ -11,6 +11,7 @@
 #include <main.h>
 #include <utils.h>
 #include <response.h>
+#include <router.h>
 
 #define MAX_CLIENTS 100
 
@@ -19,12 +20,18 @@ volatile sig_atomic_t shutdown_requested = 0;
 
 pthread_key_t client_fd_key;
 pthread_once_t key_once = PTHREAD_ONCE_INIT;
+Router* router;
 
 
 
 void* client_handle(void* arg);
 static void make_key();
 static void handle_sigint(int sig);
+
+void test(HTTPRequest* httpRequest, HTTPResponse* HTTPResponse)
+{
+    response_sendFile("/index.html");
+}
 
 int main(int argc, char* argv[]) {
 
@@ -40,6 +47,16 @@ int main(int argc, char* argv[]) {
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
+
+
+    // Router setup
+    router = router_create();
+    if(router == NULL)
+    {
+        return 0;
+    };
+
+    router_get(router, "/", test);
 
     // Socket setup
 
@@ -120,15 +137,14 @@ void* client_handle(void* arg) {
         printf("%s\n", request);
 
         HTTPRequest httpRequest;
-        // if(parseRequest(request, &httpRequest) == -1)
-        // {
-        //     response_sendError(400);
-        //     continue;
-        // }
+        if(parseRequest(request, &httpRequest) == -1)
+        {
+            response_sendError(400);
+            continue;
+        }
         char path[MAX_PATH_SIZE];
-        resolvePath("/index.html", path);
 
-        response_sendError(500);
+        router_runHandler(router, &httpRequest);
         memset(request, 0, sizeof(request));
     }    
 
