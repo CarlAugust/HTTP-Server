@@ -7,7 +7,20 @@
 #include<response.h>
 #include<types.h>
 
+typedef struct {
+    int server_fd;
+    struct sockaddr* addr;
+    socklen_t addr_len;
+} ServerSocket;
+
+
+// Creates a ServerSocket struct and binds it to a port
+ServerSocket socket_serverSetup(uint16_t port);
+
+int socket_runServer(ServerSocket serverSocket);
+
 // Gets the client on the current thread
 int get_client_fd();
+
 
 #endif // !

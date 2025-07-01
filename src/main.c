@@ -12,6 +12,7 @@
 #include <utils.h>
 #include <response.h>
 #include <router.h>
+#include <poll.h>
 
 #define MAX_CLIENTS 100
 
@@ -21,8 +22,6 @@ volatile sig_atomic_t shutdown_requested = 0;
 pthread_key_t client_fd_key;
 pthread_once_t key_once = PTHREAD_ONCE_INIT;
 Router* router;
-
-
 
 void* client_handle(void* arg);
 static void make_key();
@@ -41,14 +40,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // Signal setup
-    struct sigaction sa;
-    sa.sa_handler = handle_sigint;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, NULL);
-
-
     // Router setup
     router = router_create();
     if(router == NULL)
@@ -58,39 +49,61 @@ int main(int argc, char* argv[]) {
 
     router_get(router, "/", test);
 
+    // Signal setup
+    struct sigaction sa;
+    sa.sa_handler = handle_sigint;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+
     // Socket setup
 
     uint16_t port = atoi(argv[1]);
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == -1) {
+    ServerSocket serverSocket = socket_serverSetup(port);
+    socket_runServer(serverSocket);
+
+    free(router);
+    exit(0);
+}
+
+// Return a server file descriptor that is binded to a port 
+ServerSocket socket_serverSetup(uint16_t port)
+{
+    ServerSocket serverSocket;
+    serverSocket.server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket.server_fd == -1) {
         perror("Error when creating socket\n");
         close(server_fd);
         exit(0);
     }
 
     int opt = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(serverSocket.server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_addr.s_addr = INADDR_ANY;
     addr_in.sin_port = htons(port);
 
-    struct sockaddr* addr = (struct sockaddr *)&addr_in;
-    socklen_t addr_len = sizeof(addr_in);
+    serverSocket.addr = (struct sockaddr *)&addr_in;
+    serverSocket.addr_len = sizeof(addr_in);
 
-    if(bind(server_fd, addr, addr_len) == -1)
+    if(bind(serverSocket.server_fd, serverSocket.addr, serverSocket.addr_len) == -1)
     {
         perror("Error when binding socket\n");
-        close(server_fd);
+        close(serverSocket.server_fd);
         exit(0);
     }
+    return serverSocket;
+}
 
-    if(listen(server_fd, 10) == -1)
+int socket_runServer(ServerSocket serverSocket)
+{
+    if(listen(serverSocket.server_fd, 10) == -1)
     {
         perror("Error when listening");
-        close(server_fd);
+        close(serverSocket.server_fd);
         exit(0);
     }
 
@@ -98,7 +111,7 @@ int main(int argc, char* argv[]) {
     uint8_t thread_count = 0;
 
     while(!shutdown_requested) {
-        int client_fd = accept(server_fd, addr, &addr_len);
+        int client_fd = accept(serverSocket.server_fd, serverSocket.addr, &serverSocket.addr_len);
         if(client_fd == -1) {
             perror("Failed while accepting\n");
             continue;
@@ -118,8 +131,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < thread_count; ++i) {
         pthread_join(threads[i], NULL);
     }
-
-    exit(0);
+    return 0;
 }
 
 
@@ -128,33 +140,53 @@ void* client_handle(void* arg) {
     pthread_once(&key_once, make_key);
     pthread_setspecific(client_fd_key, (void*)(intptr_t)client_fd);
     char request[MAX_REQUEST_SIZE];
-    int readval;
 
-    while((readval = read(client_fd, &request, MAX_REQUEST_SIZE - 1)) > 0 && !shutdown_requested) {
-        // Null terminate to be safe
-        request[readval] = '\0';
+    struct pollfd pfd;
+    pfd.fd = client_fd;
+    pfd.events = POLLIN;
 
-        printf("%s\n", request);
+    while(!shutdown_requested) {
 
-        HTTPRequest httpRequest;
-        if(parseRequest(request, &httpRequest) == -1)
+        int poll_result = poll(&pfd, 1, 1000);
+        if (poll_result == -1)
         {
-            response_sendError(400);
+            perror("Error when poll\n");
+            break;
+        } else if (poll_result == 0)
+        {
+            // Timeout
             continue;
         }
-        char path[MAX_PATH_SIZE];
 
-        router_runHandler(router, &httpRequest);
-        memset(request, 0, sizeof(request));
+        if (pfd.revents && POLLIN)
+        {
+            // Null terminate to be safe
+            int readval = read(client_fd, request, MAX_REQUEST_SIZE);
+            if (readval > 0)
+            {
+                request[readval] = '\0';
+
+                printf("%s\n", request);
+
+                HTTPRequest httpRequest;
+                if(parseRequest(request, &httpRequest) == -1)
+                {
+                    response_sendError(400);
+                    continue;
+                }
+                char path[MAX_PATH_SIZE];
+
+                router_runHandler(router, &httpRequest);
+                memset(request, 0, sizeof(request));
+            } else if (readval == 0) {
+                break;
+            } else {
+                perror("Error");
+                break;
+            }
+
+        }
     }    
-
-    if (readval == 0) {
-        printf("Client disconnected\n");
-    } else if (shutdown_requested) {
-        printf("SIGNINT told the thread to stop\n");
-    } else if (readval < 0) {
-        perror("Read error\n");
-    }
 
     close(client_fd);
     pthread_exit(NULL);

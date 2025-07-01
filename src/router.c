@@ -148,22 +148,13 @@ int router_runHandler(Router* router, HTTPRequest* httpRequest)
     HTTPResponse* httpResponse = malloc(sizeof(httpResponse));
 
     if (strncmp(httpRequest->method, "GET", sizeof(httpRequest->method)) == 0) {
-        if (routePtr->get != NULL)
-        {
-            routePtr->get(httpRequest, httpResponse);
-        }
+        if (routePtr->get != NULL) routePtr->get(httpRequest, httpResponse);
     } else if (strncmp(httpRequest->method, "POST", sizeof(httpRequest->method)) == 0) {
-        if (routePtr->post != NULL)
-        {
-            routePtr->post(httpRequest, httpResponse);
-        }
-    } else if (strncmp(httpRequest->method, "DELETE", sizeof(httpRequest->method)) == 0)
-    {
-        if (routePtr->delete != NULL)
-        {
-            routePtr->delete(httpRequest, httpResponse);
-        }
+        if (routePtr->post != NULL) routePtr->post(httpRequest, httpResponse);
+    } else if (strncmp(httpRequest->method, "DELETE", sizeof(httpRequest->method)) == 0) {
+        if (routePtr->delete != NULL) routePtr->delete(httpRequest, httpResponse);
     }
 
     free(httpResponse);
+    return 0;
 }

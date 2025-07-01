@@ -37,6 +37,7 @@ typedef struct Router {
     uint32_t listLength;
 } Router;
 
+// Allocates a Router struct and passes ownership
 Router* router_create();
 
 int router_runHandler(Router* router, HTTPRequest* httpRequest);
