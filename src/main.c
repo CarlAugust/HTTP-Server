@@ -21,9 +21,8 @@ volatile sig_atomic_t shutdown_requested = 0;
 
 pthread_key_t client_fd_key;
 pthread_once_t key_once = PTHREAD_ONCE_INIT;
-Router* router;
 
-void* client_handle(void* arg);
+void* client_httpHandle(void* arg);
 static void make_key();
 static void handle_sigint(int sig);
 
@@ -41,7 +40,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Router setup
-    router = router_create();
+    Router* router = router_create();
     if(router == NULL)
     {
         return 0;
@@ -61,7 +60,7 @@ int main(int argc, char* argv[]) {
     uint16_t port = atoi(argv[1]);
 
     ServerSocket serverSocket = socket_serverSetup(port);
-    socket_runServer(serverSocket);
+    socket_runHttpServer(serverSocket, router);
 
     free(router);
     exit(0);
@@ -98,7 +97,13 @@ ServerSocket socket_serverSetup(uint16_t port)
     return serverSocket;
 }
 
-int socket_runServer(ServerSocket serverSocket)
+// Used specifically to get multible arguments for client_httpHandle
+struct client_and_router {
+    Router* router;
+    int client_fd;
+};
+
+int socket_runHttpServer(ServerSocket serverSocket, Router* router)
 {
     if(listen(serverSocket.server_fd, 10) == -1)
     {
@@ -117,7 +122,12 @@ int socket_runServer(ServerSocket serverSocket)
             continue;
         }
         if (thread_count < MAX_CLIENTS) {
-            if(pthread_create(&threads[thread_count++], NULL, client_handle, (void*)&client_fd) != 0)
+
+            struct client_and_router candr;
+            candr.client_fd = client_fd;
+            candr.router = router;
+
+            if(pthread_create(&threads[thread_count++], NULL, client_httpHandle, (void*)&candr) != 0)
             {
                 perror("Thread creation failed\n");
                 close(client_fd);
@@ -134,9 +144,10 @@ int socket_runServer(ServerSocket serverSocket)
     return 0;
 }
 
+void* client_httpHandle(void* arg) {
+    struct client_and_router* candr = (struct client_and_router*)arg;
+    int client_fd = candr->client_fd;
 
-void* client_handle(void* arg) {
-    int client_fd = *(int *)arg;
     pthread_once(&key_once, make_key);
     pthread_setspecific(client_fd_key, (void*)(intptr_t)client_fd);
     char request[MAX_REQUEST_SIZE];
@@ -176,7 +187,7 @@ void* client_handle(void* arg) {
                 }
                 char path[MAX_PATH_SIZE];
 
-                router_runHandler(router, &httpRequest);
+                router_runHandler(candr->router, &httpRequest);
                 memset(request, 0, sizeof(request));
             } else if (readval == 0) {
                 break;

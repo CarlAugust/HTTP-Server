@@ -6,6 +6,7 @@
 #include<utils.h>
 #include<response.h>
 #include<types.h>
+#include<router.h>
 
 typedef struct {
     int server_fd;
@@ -17,7 +18,7 @@ typedef struct {
 // Creates a ServerSocket struct and binds it to a port
 ServerSocket socket_serverSetup(uint16_t port);
 
-int socket_runServer(ServerSocket serverSocket);
+int socket_runHttpServer(ServerSocket serverSocket, Router* router);
 
 // Gets the client on the current thread
 int get_client_fd();

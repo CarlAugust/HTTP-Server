@@ -25,6 +25,12 @@ static uint8_t router_includes(Router* router, const char* path)
     return 0;
 }
 
+// Removes trailing / unless path = /, /about/ becomes /about
+static int router_pathNormalize(const char* path, const char* routerPath)
+{
+    return 0;
+}
+
 static int router_add(Router* router, HttpMethod httpMethod, const char* path, RouteHandler routeHandler)
 {
     uint32_t boo = router->listLength;
@@ -101,12 +107,8 @@ int router_delete(Router* router, const char* path, RouteHandler routeHandler)
 
 */
 
+// Strips query parameters, /about?id=23 then path becomes /about and stores query id=23
 static int router_pathStripQuery(HTTPRequest* httpRequest, const char* path)
-{
-    return 0;
-}
-
-static int router_pathNormalize(const char* path, const char* routerPath)
 {
     return 0;
 }
